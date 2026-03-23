@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "ChatGPT Multi Image Prompt",
+  "version": "1.0.0",
+  "description": "Paste multiple image prompts, auto-send them to ChatGPT one by one with smart pacing, and download all generated images in one click.",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "scripting",
+    "storage",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*"],
+      "js": ["content-chatgpt.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

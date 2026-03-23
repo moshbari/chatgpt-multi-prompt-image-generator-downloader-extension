@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatGPT Multi Image Prompt</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>Multi Image Prompt</h1>
+      <p class="subtitle">Batch Image Generation for ChatGPT</p>
+    </div>
+
+    <!-- Step 1: Input -->
+    <div id="step-input" class="step active">
+      <div class="form-group">
+        <label for="prompts-textarea">Paste Your Image Prompts</label>
+        <textarea id="prompts-textarea" rows="10" placeholder="Paste your image prompts here. Separate each prompt with a blank line.
+
+Example:
+A futuristic city skyline at sunset with flying cars...
+
+A cozy cabin in the mountains surrounded by snow...
+
+A magical underwater kingdom with coral castles..."></textarea>
+        <div class="prompt-count" id="prompt-count">0 prompts detected</div>
+      </div>
+
+      <div class="form-group">
+        <label for="separator">Prompt Separator</label>
+        <select id="separator">
+          <option value="blank-line">Blank Line (double enter)</option>
+          <option value="triple-dash">--- (triple dash)</option>
+          <option value="numbered">Numbered (1. 2. 3.)</option>
+          <option value="double-newline">Each line is a prompt</option>
+        </select>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-label">Timing Settings</div>
+
+        <div class="form-group" style="margin-bottom:10px">
+          <label for="delay-between">Delay Between Prompts <span class="field-hint">(seconds)</span></label>
+          <div class="delay-input-row">
+            <input type="range" id="delay-range" min="30" max="180" value="90" step="10" />
+            <span class="delay-value" id="delay-value">90s</span>
+          </div>
+          <p class="field-hint">Recommended: 60-120s to avoid ChatGPT rate limits</p>
+        </div>
+      </div>
+
+      <!-- Download Settings -->
+      <div class="settings-section">
+        <div class="settings-label">Download Settings</div>
+
+        <div class="form-group" style="margin-bottom:10px">
+          <label for="download-folder">Save Folder <span class="field-hint">(inside Downloads)</span></label>
+          <div class="folder-input-row">
+            <span class="folder-prefix-label">Downloads /</span>
+            <input type="text" id="download-folder" value="ChatGPT-Images" placeholder="e.g., ChatGPT-Images" />
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0">
+          <label for="download-prefix">Filename Prefix</label>
+          <input type="text" id="download-prefix" value="img" placeholder="e.g., img" />
+        </div>
+      </div>
+
+      <button id="btn-start" class="btn-primary">
+        Start Generating
+      </button>
+    </div>
+
+    <!-- Step 2: Progress -->
+    <div id="step-progress" class="step">
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <span class="progress-text" id="progress-text">0%</span>
+      </div>
+
+      <div class="prompt-tracker" id="prompt-tracker">
+        <span class="tracker-label">Prompt:</span>
+        <span class="tracker-current" id="tracker-current">0</span>
+        <span class="tracker-sep">/</span>
+        <span class="tracker-total" id="tracker-total">0</span>
+      </div>
+
+      <div class="status-log" id="status-log"></div>
+
+      <div class="current-action" id="current-action">
+        Preparing...
+      </div>
+
+      <button id="btn-cancel" class="btn-secondary">
+        Cancel
+      </button>
+    </div>
+
+    <!-- Step 3: Done -->
+    <div id="step-done" class="step">
+      <div class="done-header">
+        <div class="done-icon">&#10003;</div>
+        <h2>All Done!</h2>
+        <p id="done-summary">All images generated and downloaded.</p>
+      </div>
+
+      <div id="download-status" class="download-status-done"></div>
+
+      <div id="results-summary" class="results-summary"></div>
+
+      <button id="btn-redownload" class="btn-secondary btn-redownload">
+        Re-download All Images
+      </button>
+
+      <button id="btn-new" class="btn-primary" style="margin-top:8px">
+        New Batch
+      </button>
+    </div>
+
+    <!-- Quick Download (always visible) -->
+    <div class="quick-download-section">
+      <div class="quick-download-label">Quick Download</div>
+      <button id="btn-download-all" class="btn-quick-dl">
+        <span class="dl-icon">&#11015;</span>
+        Download All ChatGPT Images
+      </button>
+      <div id="quick-dl-status" class="quick-dl-status"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <span>v1.0.0</span>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
