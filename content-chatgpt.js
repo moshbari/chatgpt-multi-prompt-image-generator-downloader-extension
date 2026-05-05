@@ -595,7 +595,7 @@
   // script context), then create an Object URL. Blob URLs have NO server
   // headers (no Content-Disposition), so chrome.downloads.download() will
   // properly respect our custom filename and folder path.
-  async function downloadSingleImage(imgUrl, slideNumber) {
+  async function downloadSingleImage(imgUrl, slideNumber, promptText) {
     let blobUrl = null;
     let mimeType = "image/png";
 
@@ -613,7 +613,7 @@
 
     return new Promise((resolve) => {
       chrome.runtime.sendMessage(
-        { action: "downloadImageUrl", url: blobUrl, slideNumber, mimeType },
+        { action: "downloadImageUrl", url: blobUrl, slideNumber, mimeType, promptText },
         (response) => {
           // Revoke the blob URL after giving the download enough time to start
           if (blobUrl && blobUrl.startsWith("blob:")) {
@@ -698,7 +698,16 @@
             existing.src !== img.src &&
             scanPass > existing.scanPass)
         ) {
-          candidateMap.set(turnId, { src: img.src, w, h, area, scanPass });
+          // Extract prompt text from the user turn preceding this image turn
+          let promptText = "";
+          if (turn) {
+            const prevTurn = turn.previousElementSibling;
+            if (prevTurn && prevTurn.getAttribute("data-testid")?.startsWith("conversation-turn-")) {
+              const userMsg = prevTurn.querySelector('[data-message-author-role="user"]');
+              promptText = userMsg ? userMsg.textContent.trim() : prevTurn.textContent.trim();
+            }
+          }
+          candidateMap.set(turnId, { src: img.src, w, h, area, scanPass, promptText });
         }
       }
     }
@@ -751,15 +760,16 @@
       console.log("[MultiImg] Second pass found", candidateMap.size - firstPassCount, "additional image(s)!");
     }
 
-    // Deduplicate URLs
+    // Deduplicate URLs and carry prompt text from candidateMap
     const urlSet = new Set();
-    const imageUrls = [];
+    const imageEntries = [];
     for (const c of candidateMap.values()) {
       if (!urlSet.has(c.src)) {
         urlSet.add(c.src);
-        imageUrls.push(c.src);
+        imageEntries.push({ src: c.src, promptText: c.promptText || "" });
       }
     }
+    const imageUrls = imageEntries.map((e) => e.src);
     console.log(
       "[MultiImg] Total unique images found:",
       imageUrls.length,
@@ -800,7 +810,7 @@
         },
       });
 
-      const result = await downloadSingleImage(imageUrls[i], i + 1);
+      const result = await downloadSingleImage(imageUrls[i], i + 1, imageEntries[i].promptText);
       results.push(result);
       await sleep(500);
     }

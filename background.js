@@ -272,7 +272,7 @@ async function runPipeline(config) {
 // ============================================================
 // Image Download Handler
 // ============================================================
-async function handleImageDownload(imageUrl, slideNumber, mimeType) {
+async function handleImageDownload(imageUrl, slideNumber, mimeType, promptText) {
   let settings = DEFAULT_SETTINGS;
   try {
     const result = await chrome.storage.local.get("multiImgSettings");
@@ -290,7 +290,19 @@ async function handleImageDownload(imageUrl, slideNumber, mimeType) {
   // Get timezone abbreviation (e.g., "GST", "EST", "PST")
   const tzAbbr = now.toLocaleTimeString("en-US", { timeZoneName: "short" }).split(" ").pop();
   const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}-${String(now.getSeconds()).padStart(2, "0")}_${tzAbbr}`;
-  const prefix = settings.prefix || "img";
+  // Use first 5 words of prompt text as filename base, fallback to prefix
+  let nameBase = settings.prefix || "img";
+  if (promptText && promptText.trim()) {
+    const words = promptText.trim().split(/\s+/).slice(0, 5);
+    // Sanitize: keep only letters, numbers, spaces → replace spaces with underscores
+    nameBase = words
+      .join(" ")
+      .replace(/[^a-zA-Z0-9\s]/g, "")
+      .trim()
+      .replace(/\s+/g, "_")
+      .toLowerCase();
+    if (!nameBase) nameBase = settings.prefix || "img";
+  }
   const slideStr = slideNumber ? `_${slideNumber}` : "";
 
   // Detect file extension — prefer explicit mimeType from content script
@@ -304,7 +316,7 @@ async function handleImageDownload(imageUrl, slideNumber, mimeType) {
     else if (imageUrl.includes(".webp") || imageUrl.includes("image/webp")) ext = "webp";
   }
 
-  const filename = `${prefix}${slideStr}_${timestamp}.${ext}`;
+  const filename = `${nameBase}${slideStr}_${timestamp}.${ext}`;
   const folder = settings.folder || "ChatGPT-Images";
   const fullPath = `${folder}/${filename}`;
 
@@ -405,7 +417,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break;
 
     case "downloadImageUrl":
-      handleImageDownload(message.url, message.slideNumber, message.mimeType)
+      handleImageDownload(message.url, message.slideNumber, message.mimeType, message.promptText)
         .then((result) => sendResponse(result))
         .catch((err) => sendResponse({ success: false, error: String(err) }));
       return true;
